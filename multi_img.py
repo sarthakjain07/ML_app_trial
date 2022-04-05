@@ -61,1207 +61,1195 @@ import pickle
 pickle.dump(clf,open('img_model.p','wb'))
 model=pickle.load(open('img_model.p','rb'))
 
-!pip install streamlit
+pip install streamlit
 
-!pip install easyocr
-!pip install opencv-python-headless==4.1.2.30
+pip install easyocr
+pip install opencv-python-headless==4.1.2.30
 
-!pip install db-sqlite3
+pip install db-sqlite3
 
-!apt install libzbar0
-!pip install pyzbar
-
-# Commented out IPython magic to ensure Python compatibility.
-# %%writefile app.py
-# import json
-# import easyocr
-# from matplotlib import pyplot as plt
-# import tkinter
-# from tkinter import font
-# import cv2
-# import numpy as np
-# import sys
-# import os
-# from PIL import Image
-# import io
-# import streamlit as st
-# from skimage.io import imread
-# from skimage.transform import resize
-# import pickle
-# import re
-# import pandas as pd
-# import sqlite3
-# import pyzbar.pyzbar as pyzbar
-# from pyzbar.pyzbar import decode
-# 
-# 
-# 
-# st.title('Document Identification and Verification')
-# page_names = ['Single Image', 'Multi-image File']
-# page = st.radio('Select Option', page_names)
-# if page == 'Single Image':
-#    
-#   model=pickle.load(open('img_model.p','rb'))
-# 
-#   your_name = st.text_input("Enter your Name")
-#   #st.title(your_name)
-#   your_no = st.text_input("Enter your Document Number")
-#   #st.title(your_no)
-#   st.text('upload the Image')
-#   uploaded_file= st.file_uploader("choose an image...",type=['jpeg','jpg','png'])
-# 
-#   @st.cache(suppress_st_warning=True)
-#   def aa(result,img,your_name,your_no):
-#     decodedObjects = pyzbar.decode(img)
-#     for obj in decodedObjects:
-#       x=list(str(obj.data).split('"'))
-#       if(obj.type=='QRCODE'):
-#         print(x[7],x[5])
-#     try:
-#       aa_name=x[7]
-#       aa_no=x[5]
-#       if (aa_name==your_name and aa_no==your_no):
-#         aut="YES"
-#         ver="YES"
-#         #st.write("Aadhar Name:"+ aa_name)
-#         #st.write("Aadhar no:"+ aa_no)
-#         df1(aa_name,aa_no,aut,ver)
-#         st.success("The Document is Identified as Aadhaar Card and Authenticated successfully...!")
-#     except:    
-#       spacer = 100
-#       t=''
-#       l=['Unique', 'Identification', 'Authority', 'of', 'India','Solapur', 'North','Father','Near Ram Mandir']
-#       for detection in result: 
-#         top_left = tuple(detection[0][0])
-#         bottom_right = tuple(detection[0][2])
-#         text = detection[1]
-#         try:
-#           img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
-#           img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
-#         except:
-#           pass
-#         
-#         
-#         spacer+=15
-#         #print(text)
-# 
-#         x=text.split(" ")
-#         c=0
-#         for i in x:
-#           if i in l:
-#             c=1
-#             break
-#         if c==0:
-#           t=t+text+"\n"
-# 
-#       aa_pattern=r"\d{4}\s\d{4}\s\d{4}"
-#       aa_no_=re.search(aa_pattern,t).group()
-#       no=''
-#       for i in aa_no_:
-#         if(i!="\n" and i!=" "):
-#             no=no+i
-#       aa_no=no
-#       #st.write("Aadhar Number :"+ no)
-# 
-# 
-#       try:
-#           aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
-#           aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
-#       except AttributeError:
-#           aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
-#           aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
-# 
-#       #st.write("Name :"+ aa_name)
-# 
-# 
-#       if your_name==aa_name and your_no==aa_no:
-#         aut="NO"
-#         ver="YES"
-#         df1(aa_name,aa_no,aut,ver)
-#         st.error("The Document is Identified as Aadhaar Card and verified. But cannot authenticate due to blur image or QRcode is not available.  \n  Please upload again...!")
-#             
-#             
-#       else:
-#         aut="NO"
-#         ver="NO"
-#         df1(aa_name,aa_no,aut,ver)
-#         st.error("The Document is Identified as Aadhaar Card, but not verified and authenticate.  \n  Please verify again...!")
-# 
-#   @st.cache(suppress_st_warning=True)
-#   def df1(aa_name,aa_no,aut,ver):
-#     db = sqlite3.connect("testing_aa.db")
-#     #db.execute("drop table if exists result1")
-#     #st.write(aa_no)
-#     try:
-#         db.execute("create table result1(Name text, Aadhaar_No number ,Authenticate text, Verification text)")
-#     except:
-#         print("Already table existed !!")
-#     cmd = "insert into result1(Name, Aadhaar_No,Authenticate,Verification) values('{}','{}','{}','{}')".format(aa_name,aa_no,aut,ver)
-#     db.execute(cmd)
-#     db.commit()
-#     qry = """ SELECT * FROM result1 """
-#     df1 = pd.read_sql_query(qry, db)
-#     st.write(df1.head())
-# 
-#   @st.cache(suppress_st_warning=True)
-#   def pan(result,img,your_name,your_no):
-#     spacer = 100
-#     t=""
-#     l=["INCOME","TAX","DEPARTMENT","GOVT","OF","INDIA","Permanent","Account","Number"]
-#     for detection in result: 
-#         top_left = tuple(detection[0][0])
-#         bottom_right = tuple(detection[0][2])
-#         text = detection[1]
-#         try:
-#           img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
-#           img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
-#         except:
-#           pass
-#         
-#         spacer+=15
-#         #print(text)
-#         x=text.split(" ")
-#         c=0
-#         for i in x:
-#           if i in l:
-#             c=1
-#             break
-#         if c==0:
-#           t=t+text+"\n"
-#     #st.write(t)  
-#     pan_pattern=r"[A-Z]{5}\d{4}[A-Z]"
-#     pan_name=r"^[A-Z]+\s[A-Z]+\s[A-Z]+\s"
-#     pan_no=re.search(pan_pattern,t).group()
-#     try:
-#       pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
-#     except:
-#       pan_name=r"^[A-Z]+\s[A-Z]+\s"
-#       pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
-#     pan_name=pan_name[:len(pan_name)-1]
-#     #st.write("PAN Number :"+pan_no)
-#     #st.write("Name :"+ pan_name)
-#     
-#     if your_name==pan_name and your_no==pan_no:
-#       v_p="YES"
-#       df2(pan_name,pan_no,v_p)
-#       st.success("The Document is Identified as PAN Card and verified successfully.")
-#       
-#           
-#           
-#     else:
-#       v_p="NO"
-#       df2(pan_name,pan_no,v_p)
-#       st.error("The Document is Identified as PAN Card, but not verified.  \n  Please verify again...!")
-#       
-# 
-#   @st.cache(suppress_st_warning=True)
-#   def df2(pan_name,pan_no,v_p):
-#     db = sqlite3.connect("testing_pan.db")
-#     #db.execute("drop table if exists result2")
-#     try:
-#         db.execute("create table result2(Name text, PAN_No varchar2(50), Verification text)")
-#     except:
-#         print("Already table existed !!")
-#     cmd = "insert into result2(Name, PAN_No, Verification) values('{}','{}','{}')".format(pan_name,pan_no,v_p)
-#     db.execute(cmd)
-#     db.commit()
-#     qry = """ SELECT * FROM result2 """
-#     df2 = pd.read_sql_query(qry, db)
-#     st.write(df2.head())
-# 
-# 
-#   @st.cache(suppress_st_warning=True)
-#   def driving(result,img,your_name,your_no):
-# 
-#     spacer = 100
-#     t=""
-#     l=[]
-#     f=0
-#     for detection in result: 
-#         top_left = tuple(detection[0][0])
-#         bottom_right = tuple(detection[0][2])
-#         text = detection[1]
-#         try:
-#           img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
-#           img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
-#         except:
-#           pass
-#       
-#         spacer+=15
-#         #print(text)
-#         x=text.split(" ")
-#         l.append(x)
-#         t=t+text+"\n"
-# 
-#     if(['Name'] in l):
-#       d_name=l[l.index(['Name'])+1]
-#       d_name=' '.join(map(str,d_name))
-#       #print(d_name)
-#       #print(type(d_name))
-#       f=1
-#     d_pattern=r"[A-Z]{2}\w+\s\d\w+"
-#     d_no=re.search(d_pattern,t).group()
-#     
-#     if f==0:
-#       d_name=r"^[A-Z]+\s[A-Z]+\s"
-#       d_name=re.search(d_name,t,flags=re.MULTILINE).group()
-#     #st.write("Driving License Number :"+d_no)
-#     #st.write("Name :"+ d_name)
-# 
-#     if your_name==d_name and your_no==d_no:
-#           v_d="YES"
-#           df3(d_name,d_no,v_d)
-#           st.success("The Document is Identified as Driving License and verified successfully.")
-#           
-#           
-#     else:
-#           v_d="NO"
-#           df3(d_name,d_no,v_d)
-#           st.error("The Document is Identified as Driving License, but not verified.  \n  Please verify again...!")
-# 
-#   @st.cache(suppress_st_warning=True)
-#   def df3(d_name,d_no,v_d):
-#     db = sqlite3.connect("testing_DL.db")
-#     #db.execute("drop table if exists result3")
-#     try:
-#         db.execute("create table result3(Name text, Driving_License_No varchar2(50), Verification text)")
-#     except:
-#         print("Already table existed !!")
-#     cmd = "insert into result3(Name, Driving_License_No, Verification) values('{}','{}','{}')".format(d_name,d_no,v_d)
-#     db.execute(cmd)
-#     db.commit()
-#     qry = """ SELECT * FROM result3 """
-#     df3 = pd.read_sql_query(qry, db)
-#     st.write(df3.head())
-# 
-#   if uploaded_file is not None:
-# 
-#           img = Image.open(uploaded_file)
-#           catagories=['Aadhar card', 'Driving license', 'Pan card']
-#           #st.write('Result...')
-#           flat_data=[]
-#           imgi=np.array(img)
-#           img_resized=resize(imgi,(150,150,3))
-#           flat_data.append(img_resized.flatten())
-#           flat_data=np.array(flat_data)
-#           y_out=model.predict(flat_data)
-#           y_out=catagories[y_out[0]]
-#           IMAGE_PATH = img
-#           reader = easyocr.Reader(['en'])
-#           result = reader.readtext(IMAGE_PATH)
-#           
-#                   
-#           if y_out=="Pan card":
-#               data = pan(result,imgi,your_name,your_no)
-#           elif y_out=="Aadhar card":
-#               data = aa(result,imgi,your_name,your_no)
-#           else:
-#               data = driving(result,imgi,your_name,your_no)
-#       #st.success("Here you go!")
-#   else:
-#       st.write("Upload an Image")
-# 
-# elif page == 'Multi-image File':
-# 
-#   st.text('upload the Multi-image CSV File')
-# 
-#   model=pickle.load(open('img_model.p','rb'))
-# 
-#   dataset = st.file_uploader("upload file here", type = ['csv'])
-#   if dataset is not None:
-#     df = pd.read_csv(dataset)
-# 
-#     @st.cache(suppress_st_warning=True)
-#     def aa(result,img,your_name,your_no):
-#       decodedObjects = pyzbar.decode(img)
-#       for obj in decodedObjects:
-#         x=list(str(obj.data).split('"'))
-#         if(obj.type=='QRCODE'):
-#           print(x[7],x[5])
-#       try:
-#         aa_name=x[7]
-#         aa_no=x[5]
-#         if (aa_name==your_name and aa_no==your_no):
-#           aut="YES"
-#           ver="YES"
-#           #st.write("Aadhar Name:"+ aa_name)
-#           #st.write("Aadhar no:"+ aa_no)
-#           df1(aa_name,aa_no,aut,ver)
-#           #st.success("The Document is Identified as Aadhaar Card and Authenticated successfully...!")
-#       except:    
-#         spacer = 100
-#         t=''
-#         l=['Unique', 'Identification', 'Authority', 'of', 'India','Solapur', 'North','Father','Uniquue Identiic']
-#         for detection in result: 
-#           top_left = tuple(detection[0][0])
-#           bottom_right = tuple(detection[0][2])
-#           text = detection[1]
-#           try:
-#             img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
-#             img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
-#           except:
-#             pass   
-#           spacer+=15
-#           #print(text)
-#           x=text.split(" ")
-#           c=0
-#           for i in x:
-#             if i in l:
-#               c=1
-#               break
-#           if c==0:
-#             t=t+text+"\n"
-#         aa_pattern=r"\d{4}\s\d{4}\s\d{4}"
-#         aa_no_=re.search(aa_pattern,t).group()
-#         no=''
-#         for i in aa_no_:
-#           if(i!="\n" and i!=" "):
-#               no=no+i
-#         aa_no=no
-#         #st.write("Aadhar Number :"+ no)
-#         try:
-#             aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
-#             aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
-#         except AttributeError:
-#             aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
-#             aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
-# 
-#         #st.write("Name :"+ aa_name)
-# 
-#         if your_name==aa_name and your_no==aa_no:
-#           aut="NO"
-#           ver="YES"
-#           df1(aa_name,aa_no,aut,ver)
-#           #st.error("The Document is Identified as Aadhaar Card and verified. But cannot authenticate due to blur image or QRcode is not available.  \n  Please upload again...!")
-#               
-#         else:
-#           aut="NO"
-#           ver="NO"
-#           df1(aa_name,aa_no,aut,ver)
-#           #st.error("The Document is Identified as Aadhaar Card, but not verified and authenticate.  \n  Please verify again...!")
-# 
-#     @st.cache(suppress_st_warning=True)
-#     def df1(aa_name,aa_no,aut,ver):
-#       db = sqlite3.connect("multi_testing_aa.db")
-#       #db.execute("drop table if exists result")
-#       #st.write(aa_no)
-#       try:
-#           db.execute("create table result11(Name text, Aadhaar_No number ,Authenticate text, Verification text)")
-#       except:
-#           print("Already table existed !!")
-#       cmd = "insert into result11(Name, Aadhaar_No,Authenticate,Verification) values('{}','{}','{}','{}')".format(aa_name,aa_no,aut,ver)
-#       db.execute(cmd)
-#       db.commit()
-#       
-# 
-#     @st.cache(suppress_st_warning=True)
-#     def pan(result,img,your_name,your_no):
-#       spacer = 100
-#       t=""
-#       l=["INCOME","TAX","DEPARTMENT","GOVT","OF","INDIA","Permanent","Account","Number"]
-#       for detection in result: 
-#           top_left = tuple(detection[0][0])
-#           bottom_right = tuple(detection[0][2])
-#           text = detection[1]
-#           try:
-#             img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
-#             img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
-#           except:
-#             pass
-#           
-#           spacer+=15
-#           #print(text)
-#           x=text.split(" ")
-#           c=0
-#           for i in x:
-#             if i in l:
-#               c=1
-#               break
-#           if c==0:
-#             t=t+text+"\n"
-#       #st.write(t)  
-#       pan_pattern=r"[A-Z]{5}\d{4}[A-Z]"
-#       pan_name=r"^[A-Z]+\s[A-Z]+\s[A-Z]+\s"
-#       pan_no=re.search(pan_pattern,t).group()
-#       try:
-#         pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
-#       except:
-#         pan_name=r"^[A-Z]+\s[A-Z]+\s"
-#         pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
-#       pan_name=pan_name[:len(pan_name)-1]
-#       #st.write("PAN Number :"+pan_no)
-#       #st.write("Name :"+ pan_name)
-#       
-#       if your_name==pan_name and your_no==pan_no:
-#         v_p="YES"
-#         df2(pan_name,pan_no,v_p)
-#         #st.success("The Document is Identified as PAN Card and verified successfully.")
-#         
-#             
-#             
-#       else:
-#         v_p="NO"
-#         df2(pan_name,pan_no,v_p)
-#         #st.error("The Document is Identified as PAN Card, but not verified.  \n  Please verify again...!")
-#         
-# 
-#     @st.cache(suppress_st_warning=True)
-#     def df2(pan_name,pan_no,v_p):
-#       db = sqlite3.connect("multi_testing_pan.db")
-#       #db.execute("drop table if exists result")
-#       try:
-#           db.execute("create table result22(Name text, PAN_No varchar2(50), Verification text)")
-#       except:
-#           print("Already table existed !!")
-#       cmd = "insert into result22(Name, PAN_No, Verification) values('{}','{}','{}')".format(pan_name,pan_no,v_p)
-#       db.execute(cmd)
-#       db.commit()
-#       
-# 
-# 
-#     @st.cache(suppress_st_warning=True)
-#     def driving(result,img,your_name,your_no):
-# 
-#       spacer = 100
-#       t=""
-#       l=[]
-#       f=0
-#       for detection in result: 
-#           top_left = tuple(detection[0][0])
-#           bottom_right = tuple(detection[0][2])
-#           text = detection[1]
-#           try:
-#             img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
-#             img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
-#           except:
-#             pass
-#         
-#           spacer+=15
-#           #print(text)
-#           x=text.split(" ")
-#           l.append(x)
-#           t=t+text+"\n"
-# 
-#       if(['Name'] in l):
-#         d_name=l[l.index(['Name'])+1]
-#         d_name=' '.join(map(str,d_name))
-#         #print(d_name)
-#         #print(type(d_name))
-#         f=1
-#       d_pattern=r"[A-Z]{2}\w+\s\d\w+"
-#       d_no=re.search(d_pattern,t).group()
-#       
-#       if f==0:
-#         d_name=r"^[A-Z]+\s[A-Z]+\s"
-#         d_name=re.search(d_name,t,flags=re.MULTILINE).group()
-#       #st.write("Driving License Number :"+d_no)
-#       #st.write("Name :"+ d_name)
-# 
-#       if your_name==d_name and your_no==d_no:
-#             v_d="YES"
-#             df3(d_name,d_no,v_d)
-#             #st.success("The Document is Identified as Driving License and verified successfully.")
-#             
-#             
-#       else:
-#             v_d="NO"
-#             df3(d_name,d_no,v_d)
-#             #st.error("The Document is Identified as Driving License, but not verified.  \n  Please verify again...!")
-# 
-#     @st.cache(suppress_st_warning=True)
-#     def df3(d_name,d_no,v_d):
-#       db = sqlite3.connect("multi_testing_DL.db")
-#       #db.execute("drop table if exists result")
-#       try:
-#           db.execute("create table result33(Name text, Driving_License_No varchar2(50), Verification text)")
-#       except:
-#           print("Already table existed !!")
-#       cmd = "insert into result33(Name, Driving_License_No, Verification) values('{}','{}','{}')".format(d_name,d_no,v_d)
-#       db.execute(cmd)
-#       db.commit()
-#       
-#     #reader = csv.reader(df)
-#     #st.write(len(df))
-#     if df is not None:
-#             for i in range(len(df)):
-#               img = Image.open(df.loc[i][2])
-#               #st.image(image, use_column_width=True)
-#               #st.write(df.loc[i][2])
-#               catagories=['Aadhar card', 'Driving license', 'Pan card']
-#               #st.write('Result...')
-#               flat_data=[]
-#               imgi=np.array(img)
-#               img_resized=resize(imgi,(150,150,3))
-#               flat_data.append(img_resized.flatten())
-#               flat_data=np.array(flat_data)
-#               y_out=model.predict(flat_data)
-#               y_out=catagories[y_out[0]]
-#               IMAGE_PATH = img
-#               reader = easyocr.Reader(['en'])
-#               result = reader.readtext(IMAGE_PATH)
-#             
-#               your_name=df.loc[i][0]
-#               your_no=str(df.loc[i][1])    
-#               if y_out=="Pan card":
-#                   data = pan(result,imgi,your_name,your_no)
-#               elif y_out=="Aadhar card":
-#                   data = aa(result,imgi,your_name,your_no)
-#               else:
-#                   data = driving(result,imgi,your_name,your_no)
-#             try:
-#               db = sqlite3.connect("multi_testing_aa.db")
-#               qry = """ SELECT * FROM result11 """
-#               df1 = pd.read_sql_query(qry, db)
-#               st.write(df1.head())
-#               db.execute("drop table if exists result11")
-#             except:
-#                 pass
-#             try:
-#               db = sqlite3.connect("multi_testing_pan.db")
-#               qry = """ SELECT * FROM result22 """
-#               df2 = pd.read_sql_query(qry, db)
-#               st.write(df2.head())
-#               db.execute("drop table if exists result22")
-#             except:
-#               pass
-#             try:
-#               db = sqlite3.connect("multi_testing_DL.db")
-#               qry = """ SELECT * FROM result33 """
-#               df3 = pd.read_sql_query(qry, db)
-#               st.write(df3.head())
-#               db.execute("drop table if exists result33")
-#             except:
-#               pass
-# 
-#     else:
-#         st.write("Upload an Image")
-# 
-# else:
-#     st.write("good bye")
-# 
-# 
-# 
-# 
-# 
-# 
-# 
-#
-
-!streamlit run app.py & npx localtunnel --port 8501
+apt install libzbar0
+pip install pyzbar
 
 # Commented out IPython magic to ensure Python compatibility.
-# %%writefile app.py
-# import json
-# import easyocr
-# from matplotlib import pyplot as plt
-# import tkinter
-# from tkinter import font
-# import cv2
-# import numpy as np
-# import sys
-# import os
-# from PIL import Image
-# import io
-# import streamlit as st
-# from skimage.io import imread
-# from skimage.transform import resize
-# import pickle
-# import re
-# import pandas as pd
-# import sqlite3
-# import pyzbar.pyzbar as pyzbar
-# from pyzbar.pyzbar import decode
-# 
-# 
-# 
-# st.title('Image classifier and text extraction using ML')
-# st.text('upload the Image for identification')
-# 
-# model=pickle.load(open('img_model.p','rb'))
-# 
-# your_name = st.text_input("Enter your Name")
-# st.title(your_name)
-# your_no = st.text_input("Enter your Document Number")
-# st.title(your_no)
-# 
-# uploaded_file= st.file_uploader("choose an image...",type=['jpeg','jpg','png'])
-# 
-# #title
-# st.title('Extraction and verification of document')
-# 
-# @st.cache(suppress_st_warning=True)
-# def aa(result,img,your_name,your_no):
-#   decodedObjects = pyzbar.decode(img)
-#   for obj in decodedObjects:
-#     x=list(str(obj.data).split('"'))
-#     if(obj.type=='QRCODE'):
-#       print(x[7],x[5])
-#   try:
-#     aa_name=x[7]
-#     aa_no=x[5]
-#     if (aa_name==your_name and aa_no==your_no):
-#       aut="YES"
-#       ver="YES"
-#       st.write("Aadhar Name:"+ aa_name)
-#       st.write("Aadhar no:"+ aa_no)
-#       df1(aa_name,aa_no,aut,ver)
-#       st.success("The Document is Identified as Aadhaar Card and Authenticated successfully...!")
-#   except:    
-#     spacer = 100
-#     t=''
-#     l=['Unique', 'Identification', 'Authority', 'of', 'India','Solapur', 'North','Father']
-#     for detection in result: 
-#       top_left = tuple(detection[0][0])
-#       bottom_right = tuple(detection[0][2])
-#       text = detection[1]
-#       try:
-#         img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
-#         img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
-#       except:
-#         pass
-#       
-#       
-#       spacer+=15
-#       #print(text)
-# 
-#       x=text.split(" ")
-#       c=0
-#       for i in x:
-#         if i in l:
-#           c=1
-#           break
-#       if c==0:
-#         t=t+text+"\n"
-# 
-#     aa_pattern=r"\d{4}\s\d{4}\s\d{4}"
-#     aa_no_=re.search(aa_pattern,t).group()
-#     no=''
-#     for i in aa_no_:
-#       if(i!="\n" and i!=" "):
-#           no=no+i
-#     aa_no=no
-#     st.write("Aadhar Number :"+ no)
-# 
-# 
-#     try:
-#         aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
-#         aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
-#     except AttributeError:
-#         aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
-#         aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
-# 
-#     st.write("Name :"+ aa_name)
-# 
-# 
-#     if your_name==aa_name and your_no==aa_no:
-#       aut="NO"
-#       ver="YES"
-#       df1(aa_name,aa_no,aut,ver)
-#       st.error("The Document is Identified as Aadhaar Card and verified. But cannot authenticate due to blur image or QRcode is not available.  \n  Please upload again...!")
-#           
-#           
-#     else:
-#       aut="NO"
-#       ver="NO"
-#       df1(aa_name,aa_no,aut,ver)
-#       st.error("The Document is Identified as Aadhaar Card, but not verified and authenticate.  \n  Please verify again...!")
-# 
-# @st.cache(suppress_st_warning=True)
-# def df1(aa_name,aa_no,aut,ver):
-#   db = sqlite3.connect("testing_aa.db")
-#   #db.execute("drop table if exists result")
-#   #st.write(aa_no)
-#   try:
-#       db.execute("create table result1(Name text, Aadhaar_No number ,Authenticate text, Verification text)")
-#   except:
-#       print("Already table existed !!")
-#   cmd = "insert into result1(Name, Aadhaar_No,Authenticate,Verification) values('{}','{}','{}','{}')".format(aa_name,aa_no,aut,ver)
-#   db.execute(cmd)
-#   db.commit()
-#   qry = """ SELECT * FROM result1 """
-#   df1 = pd.read_sql_query(qry, db)
-#   st.write(df1.head())
-# 
-# @st.cache(suppress_st_warning=True)
-# def pan(result,img,your_name,your_no):
-#   spacer = 100
-#   t=""
-#   l=["INCOME","TAX","DEPARTMENT","GOVT","OF","INDIA","Permanent","Account","Number"]
-#   for detection in result: 
-#       top_left = tuple(detection[0][0])
-#       bottom_right = tuple(detection[0][2])
-#       text = detection[1]
-#       try:
-#         img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
-#         img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
-#       except:
-#         pass
-#       
-#       spacer+=15
-#       #print(text)
-#       x=text.split(" ")
-#       c=0
-#       for i in x:
-#         if i in l:
-#           c=1
-#           break
-#       if c==0:
-#         t=t+text+"\n"
-#   #st.write(t)  
-#   pan_pattern=r"[A-Z]{5}\d{4}[A-Z]"
-#   pan_name=r"^[A-Z]+\s[A-Z]+\s[A-Z]+\s"
-#   pan_no=re.search(pan_pattern,t).group()
-#   try:
-#     pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
-#   except:
-#     pan_name=r"^[A-Z]+\s[A-Z]+\s"
-#     pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
-#   pan_name=pan_name[:len(pan_name)-1]
-#   st.write("PAN Number :"+pan_no)
-#   st.write("Name :"+ pan_name)
-#   
-#   if your_name==pan_name and your_no==pan_no:
-#     v_p="YES"
-#     df2(pan_name,pan_no,v_p)
-#     st.success("The Document is Identified as PAN Card and verified successfully.")
-#     
-#         
-#         
-#   else:
-#     v_p="NO"
-#     df2(pan_name,pan_no,v_p)
-#     st.error("The Document is Identified as PAN Card, but not verified.  \n  Please verify again...!")
-#     
-# 
-# @st.cache(suppress_st_warning=True)
-# def df2(pan_name,pan_no,v_p):
-#   db = sqlite3.connect("testing_pan.db")
-#   #db.execute("drop table if exists result")
-#   try:
-#       db.execute("create table result2(Name text, PAN_No varchar2(50), Verification text)")
-#   except:
-#       print("Already table existed !!")
-#   cmd = "insert into result2(Name, PAN_No, Verification) values('{}','{}','{}')".format(pan_name,pan_no,v_p)
-#   db.execute(cmd)
-#   db.commit()
-#   qry = """ SELECT * FROM result2 """
-#   df2 = pd.read_sql_query(qry, db)
-#   st.write(df2.head())
-# 
-# 
-# @st.cache(suppress_st_warning=True)
-# def driving(result,img,your_name,your_no):
-# 
-#   spacer = 100
-#   t=""
-#   l=[]
-#   f=0
-#   for detection in result: 
-#       top_left = tuple(detection[0][0])
-#       bottom_right = tuple(detection[0][2])
-#       text = detection[1]
-#       try:
-#         img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
-#         img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
-#       except:
-#         pass
-#      
-#       spacer+=15
-#       #print(text)
-#       x=text.split(" ")
-#       l.append(x)
-#       t=t+text+"\n"
-# 
-#   if(['Name'] in l):
-#     d_name=l[l.index(['Name'])+1]
-#     d_name=' '.join(map(str,d_name))
-#     #print(d_name)
-#     #print(type(d_name))
-#     f=1
-#   d_pattern=r"[A-Z]{2}\w+\s\d\w+"
-#   d_no=re.search(d_pattern,t).group()
-#   
-#   if f==0:
-#     d_name=r"^[A-Z]+\s[A-Z]+\s"
-#     d_name=re.search(d_name,t,flags=re.MULTILINE).group()
-#   st.write("Driving License Number :"+d_no)
-#   st.write("Name :"+ d_name)
-# 
-#   if your_name==d_name and your_no==d_no:
-#         v_d="YES"
-#         df3(d_name,d_no,v_d)
-#         st.success("The Document is Identified as Driving License and verified successfully.")
-#         
-#         
-#   else:
-#         v_d="NO"
-#         df3(d_name,d_no,v_d)
-#         st.error("The Document is Identified as Driving License, but not verified.  \n  Please verify again...!")
-# 
-# @st.cache(suppress_st_warning=True)
-# def df3(d_name,d_no,v_d):
-#   db = sqlite3.connect("testing_DL.db")
-#   #db.execute("drop table if exists result")
-#   try:
-#       db.execute("create table result3(Name text, Driving_License_No varchar2(50), Verification text)")
-#   except:
-#       print("Already table existed !!")
-#   cmd = "insert into result3(Name, Driving_License_No, Verification) values('{}','{}','{}')".format(d_name,d_no,v_d)
-#   db.execute(cmd)
-#   db.commit()
-#   qry = """ SELECT * FROM result3 """
-#   df3 = pd.read_sql_query(qry, db)
-#   st.write(df3.head())
-# 
-# if uploaded_file is not None:
-# 
-#         img = Image.open(uploaded_file)
-#         catagories=['Aadhar card', 'Driving license', 'Pan card']
-#         #st.write('Result...')
-#         flat_data=[]
-#         imgi=np.array(img)
-#         img_resized=resize(imgi,(150,150,3))
-#         flat_data.append(img_resized.flatten())
-#         flat_data=np.array(flat_data)
-#         y_out=model.predict(flat_data)
-#         y_out=catagories[y_out[0]]
-#         IMAGE_PATH = img
-#         reader = easyocr.Reader(['en'])
-#         result = reader.readtext(IMAGE_PATH)
-#         
-#                 
-#         if y_out=="Pan card":
-#             data = pan(result,imgi,your_name,your_no)
-#         elif y_out=="Aadhar card":
-#             data = aa(result,imgi,your_name,your_no)
-#         else:
-#             data = driving(result,imgi,your_name,your_no)
-#     #st.success("Here you go!")
-# else:
-#     st.write("Upload an Image")
-# 
-# #db = sqlite3.connect("testing_aa.db")
-# #db.execute("drop table if exists result1")
-# #db = sqlite3.connect("testing_pan.db")
-# #db.execute("drop table if exists result2")
-# #db = sqlite3.connect("testing_DL.db")
-# #db.execute("drop table if exists result3")
-# 
-# 
-#
+%%writefile app.py
+import json
+import easyocr
+from matplotlib import pyplot as plt
+import tkinter
+from tkinter import font
+import cv2
+import numpy as np
+import sys
+import os
+from PIL import Image
+import io
+import streamlit as st
+from skimage.io import imread
+from skimage.transform import resize
+import pickle
+import re
+import pandas as pd
+import sqlite3
+import pyzbar.pyzbar as pyzbar
+from pyzbar.pyzbar import decode
+ 
+st.title('Document Identification and Verification')
+page_names = ['Single Image', 'Multi-image File']
+page = st.radio('Select Option', page_names)
+if page == 'Single Image':  
+  model=pickle.load(open('img_model.p','rb'))
+  your_name = st.text_input("Enter your Name")
+  #st.title(your_name)
+  your_no = st.text_input("Enter your Document Number")
+  #st.title(your_no)
+  st.text('upload the Image')
+  uploaded_file= st.file_uploader("choose an image...",type=['jpeg','jpg','png'])
 
-# Commented out IPython magic to ensure Python compatibility.
-# %%writefile app.py
-# import json
-# import easyocr
-# from matplotlib import pyplot as plt
-# import tkinter
-# from tkinter import font
-# import cv2
-# import numpy as np
-# import sys
-# import os
-# from PIL import Image
-# import io
-# import streamlit as st
-# from skimage.io import imread
-# from skimage.transform import resize
-# import pickle
-# import re
-# import pandas as pd
-# import sqlite3
-# import pyzbar.pyzbar as pyzbar
-# from pyzbar.pyzbar import decode
-# 
-# 
-# 
-# st.title('Image classifier and text extraction using ML')
-# st.text('upload the Image for identification')
-# 
-# model=pickle.load(open('img_model.p','rb'))
-# 
-# df = pd.read_csv("/content/drive/MyDrive/APD.csv")
-# 
-# 
-# #title
-# st.title('Extraction and verification of document')
-# 
-# @st.cache(suppress_st_warning=True)
-# def aa(result,img,your_name,your_no):
-#   decodedObjects = pyzbar.decode(img)
-#   for obj in decodedObjects:
-#     x=list(str(obj.data).split('"'))
-#     if(obj.type=='QRCODE'):
-#       print(x[7],x[5])
-#   try:
-#     aa_name=x[7]
-#     aa_no=x[5]
-#     if (aa_name==your_name and aa_no==your_no):
-#       aut="YES"
-#       ver="YES"
-#       st.write("Aadhar Name:"+ aa_name)
-#       st.write("Aadhar no:"+ aa_no)
-#       df1(aa_name,aa_no,aut,ver)
-#       st.success("The Document is Identified as Aadhaar Card and Authenticated successfully...!")
-#   except:    
-#     spacer = 100
-#     t=''
-#     l=['Unique', 'Identification', 'Authority', 'of', 'India','Solapur', 'North','Father','Uniquue Identiic']
-#     for detection in result: 
-#       top_left = tuple(detection[0][0])
-#       bottom_right = tuple(detection[0][2])
-#       text = detection[1]
-#       try:
-#         img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
-#         img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
-#       except:
-#         pass
-#       
-#       
-#       spacer+=15
-#       #print(text)
-# 
-#       x=text.split(" ")
-#       c=0
-#       for i in x:
-#         if i in l:
-#           c=1
-#           break
-#       if c==0:
-#         t=t+text+"\n"
-# 
-#     aa_pattern=r"\d{4}\s\d{4}\s\d{4}"
-#     aa_no_=re.search(aa_pattern,t).group()
-#     no=''
-#     for i in aa_no_:
-#       if(i!="\n" and i!=" "):
-#           no=no+i
-#     aa_no=no
-#     st.write("Aadhar Number :"+ no)
-# 
-# 
-#     try:
-#         aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
-#         aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
-#     except AttributeError:
-#         aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
-#         aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
-# 
-#     st.write("Name :"+ aa_name)
-# 
-# 
-#     if your_name==aa_name and your_no==aa_no:
-#       aut="NO"
-#       ver="YES"
-#       df1(aa_name,aa_no,aut,ver)
-#       st.error("The Document is Identified as Aadhaar Card and verified. But cannot authenticate due to blur image or QRcode is not available.  \n  Please upload again...!")
-#           
-#           
-#     else:
-#       aut="NO"
-#       ver="NO"
-#       df1(aa_name,aa_no,aut,ver)
-#       st.error("The Document is Identified as Aadhaar Card, but not verified and authenticate.  \n  Please verify again...!")
-# 
-# @st.cache(suppress_st_warning=True)
-# def df1(aa_name,aa_no,aut,ver):
-#   db = sqlite3.connect("testing_aa.db")
-#   #db.execute("drop table if exists result")
-#   #st.write(aa_no)
-#   try:
-#       db.execute("create table result1(Name text, Aadhaar_No number ,Authenticate text, Verification text)")
-#   except:
-#       print("Already table existed !!")
-#   cmd = "insert into result1(Name, Aadhaar_No,Authenticate,Verification) values('{}','{}','{}','{}')".format(aa_name,aa_no,aut,ver)
-#   db.execute(cmd)
-#   db.commit()
-#   
-# 
-# @st.cache(suppress_st_warning=True)
-# def pan(result,img,your_name,your_no):
-#   spacer = 100
-#   t=""
-#   l=["INCOME","TAX","DEPARTMENT","GOVT","OF","INDIA","Permanent","Account","Number"]
-#   for detection in result: 
-#       top_left = tuple(detection[0][0])
-#       bottom_right = tuple(detection[0][2])
-#       text = detection[1]
-#       try:
-#         img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
-#         img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
-#       except:
-#         pass
-#       
-#       spacer+=15
-#       #print(text)
-#       x=text.split(" ")
-#       c=0
-#       for i in x:
-#         if i in l:
-#           c=1
-#           break
-#       if c==0:
-#         t=t+text+"\n"
-#   #st.write(t)  
-#   pan_pattern=r"[A-Z]{5}\d{4}[A-Z]"
-#   pan_name=r"^[A-Z]+\s[A-Z]+\s[A-Z]+\s"
-#   pan_no=re.search(pan_pattern,t).group()
-#   try:
-#     pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
-#   except:
-#     pan_name=r"^[A-Z]+\s[A-Z]+\s"
-#     pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
-#   pan_name=pan_name[:len(pan_name)-1]
-#   st.write("PAN Number :"+pan_no)
-#   st.write("Name :"+ pan_name)
-#   
-#   if your_name==pan_name and your_no==pan_no:
-#     v_p="YES"
-#     df2(pan_name,pan_no,v_p)
-#     st.success("The Document is Identified as PAN Card and verified successfully.")
-#     
-#         
-#         
-#   else:
-#     v_p="NO"
-#     df2(pan_name,pan_no,v_p)
-#     st.error("The Document is Identified as PAN Card, but not verified.  \n  Please verify again...!")
-#     
-# 
-# @st.cache(suppress_st_warning=True)
-# def df2(pan_name,pan_no,v_p):
-#   db = sqlite3.connect("testing_pan.db")
-#   #db.execute("drop table if exists result")
-#   try:
-#       db.execute("create table result2(Name text, PAN_No varchar2(50), Verification text)")
-#   except:
-#       print("Already table existed !!")
-#   cmd = "insert into result2(Name, PAN_No, Verification) values('{}','{}','{}')".format(pan_name,pan_no,v_p)
-#   db.execute(cmd)
-#   db.commit()
-#   
-# 
-# 
-# @st.cache(suppress_st_warning=True)
-# def driving(result,img,your_name,your_no):
-# 
-#   spacer = 100
-#   t=""
-#   l=[]
-#   f=0
-#   for detection in result: 
-#       top_left = tuple(detection[0][0])
-#       bottom_right = tuple(detection[0][2])
-#       text = detection[1]
-#       try:
-#         img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
-#         img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
-#       except:
-#         pass
-#      
-#       spacer+=15
-#       #print(text)
-#       x=text.split(" ")
-#       l.append(x)
-#       t=t+text+"\n"
-# 
-#   if(['Name'] in l):
-#     d_name=l[l.index(['Name'])+1]
-#     d_name=' '.join(map(str,d_name))
-#     #print(d_name)
-#     #print(type(d_name))
-#     f=1
-#   d_pattern=r"[A-Z]{2}\w+\s\d\w+"
-#   d_no=re.search(d_pattern,t).group()
-#   
-#   if f==0:
-#     d_name=r"^[A-Z]+\s[A-Z]+\s"
-#     d_name=re.search(d_name,t,flags=re.MULTILINE).group()
-#   st.write("Driving License Number :"+d_no)
-#   st.write("Name :"+ d_name)
-# 
-#   if your_name==d_name and your_no==d_no:
-#         v_d="YES"
-#         df3(d_name,d_no,v_d)
-#         st.success("The Document is Identified as Driving License and verified successfully.")
-#         
-#         
-#   else:
-#         v_d="NO"
-#         df3(d_name,d_no,v_d)
-#         st.error("The Document is Identified as Driving License, but not verified.  \n  Please verify again...!")
-# 
-# @st.cache(suppress_st_warning=True)
-# def df3(d_name,d_no,v_d):
-#   db = sqlite3.connect("testing_DL.db")
-#   #db.execute("drop table if exists result")
-#   try:
-#       db.execute("create table result3(Name text, Driving_License_No varchar2(50), Verification text)")
-#   except:
-#       print("Already table existed !!")
-#   cmd = "insert into result3(Name, Driving_License_No, Verification) values('{}','{}','{}')".format(d_name,d_no,v_d)
-#   db.execute(cmd)
-#   db.commit()
-#   
-# 
-# if df is not None:
-#         for i in range(9):
-#           img = Image.open(df.loc[i][2])
-#           #st.image(image, use_column_width=True)
-#           #st.write(df.loc[i][2])
-#           catagories=['Aadhar card', 'Driving license', 'Pan card']
-#           #st.write('Result...')
-#           flat_data=[]
-#           imgi=np.array(img)
-#           img_resized=resize(imgi,(150,150,3))
-#           flat_data.append(img_resized.flatten())
-#           flat_data=np.array(flat_data)
-#           y_out=model.predict(flat_data)
-#           y_out=catagories[y_out[0]]
-#           IMAGE_PATH = img
-#           reader = easyocr.Reader(['en'])
-#           result = reader.readtext(IMAGE_PATH)
-#         
-#           your_name=df.loc[i][0]
-#           your_no=str(df.loc[i][1])  
-#           st.write(your_name,your_no)   
-#           if y_out=="Pan card":
-#               data = pan(result,imgi,your_name,your_no)
-#           elif y_out=="Aadhar card":
-#               data = aa(result,imgi,your_name,your_no)
-#           else:
-#               data = driving(result,imgi,your_name,your_no)
-#         try:
-#           db = sqlite3.connect("testing_aa.db")
-#           qry = """ SELECT * FROM result1 """
-#           df1 = pd.read_sql_query(qry, db)
-#           st.write(df1.head())
-#           db.execute("drop table if exists result1")
-#         except:
-#             pass
-#         try:
-#           db = sqlite3.connect("testing_pan.db")
-#           qry = """ SELECT * FROM result2 """
-#           df2 = pd.read_sql_query(qry, db)
-#           st.write(df2.head())
-#           db.execute("drop table if exists result2")
-#         except:
-#           pass
-#         try:
-#           db = sqlite3.connect("testing_DL.db")
-#           qry = """ SELECT * FROM result3 """
-#           df3 = pd.read_sql_query(qry, db)
-#           st.write(df3.head())
-#           db.execute("drop table if exists result3")
-#         except:
-#           pass
-# 
-# else:
-#     st.write("Upload an Image")
-# 
-# 
-# 
-# 
-# 
-#
+  @st.cache(suppress_st_warning=True)
+  def aa(result,img,your_name,your_no):
+    decodedObjects = pyzbar.decode(img)
+    for obj in decodedObjects:
+      x=list(str(obj.data).split('"'))
+      if(obj.type=='QRCODE'):
+        print(x[7],x[5])
+    try:
+      aa_name=x[7]
+      aa_no=x[5]
+      if (aa_name==your_name and aa_no==your_no):
+        aut="YES"
+        ver="YES"
+        #st.write("Aadhar Name:"+ aa_name)
+        #st.write("Aadhar no:"+ aa_no)
+        df1(aa_name,aa_no,aut,ver)
+        st.success("The Document is Identified as Aadhaar Card and Authenticated successfully...!")
+    except:    
+      spacer = 100
+      t=''
+      l=['Unique', 'Identification', 'Authority', 'of', 'India','Solapur', 'North','Father','Near Ram Mandir']
+      for detection in result: 
+        top_left = tuple(detection[0][0])
+        bottom_right = tuple(detection[0][2])
+        text = detection[1]
+        try:
+          img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
+          img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
+        except:
+          pass
+        
+        
+        spacer+=15
+        #print(text)
+
+        x=text.split(" ")
+        c=0
+        for i in x:
+          if i in l:
+            c=1
+            break
+        if c==0:
+          t=t+text+"\n"
+
+      aa_pattern=r"\d{4}\s\d{4}\s\d{4}"
+      aa_no_=re.search(aa_pattern,t).group()
+      no=''
+      for i in aa_no_:
+        if(i!="\n" and i!=" "):
+            no=no+i
+      aa_no=no
+      #st.write("Aadhar Number :"+ no)
+
+
+      try:
+          aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
+          aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
+      except AttributeError:
+          aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
+          aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
+
+      #st.write("Name :"+ aa_name)
+
+
+      if your_name==aa_name and your_no==aa_no:
+        aut="NO"
+        ver="YES"
+        df1(aa_name,aa_no,aut,ver)
+        st.error("The Document is Identified as Aadhaar Card and verified. But cannot authenticate due to blur image or QRcode is not available.  \n  Please upload again...!")
+            
+            
+      else:
+        aut="NO"
+        ver="NO"
+        df1(aa_name,aa_no,aut,ver)
+        st.error("The Document is Identified as Aadhaar Card, but not verified and authenticate.  \n  Please verify again...!")
+
+  @st.cache(suppress_st_warning=True)
+  def df1(aa_name,aa_no,aut,ver):
+    db = sqlite3.connect("testing_aa.db")
+    #db.execute("drop table if exists result1")
+    #st.write(aa_no)
+    try:
+        db.execute("create table result1(Name text, Aadhaar_No number ,Authenticate text, Verification text)")
+    except:
+        print("Already table existed !!")
+    cmd = "insert into result1(Name, Aadhaar_No,Authenticate,Verification) values('{}','{}','{}','{}')".format(aa_name,aa_no,aut,ver)
+    db.execute(cmd)
+    db.commit()
+    qry = """ SELECT * FROM result1 """
+    df1 = pd.read_sql_query(qry, db)
+    st.write(df1.head())
+
+  @st.cache(suppress_st_warning=True)
+  def pan(result,img,your_name,your_no):
+    spacer = 100
+    t=""
+    l=["INCOME","TAX","DEPARTMENT","GOVT","OF","INDIA","Permanent","Account","Number"]
+    for detection in result: 
+        top_left = tuple(detection[0][0])
+        bottom_right = tuple(detection[0][2])
+        text = detection[1]
+        try:
+          img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
+          img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
+        except:
+          pass
+        
+        spacer+=15
+        #print(text)
+        x=text.split(" ")
+        c=0
+        for i in x:
+          if i in l:
+            c=1
+            break
+        if c==0:
+          t=t+text+"\n"
+    #st.write(t)  
+    pan_pattern=r"[A-Z]{5}\d{4}[A-Z]"
+    pan_name=r"^[A-Z]+\s[A-Z]+\s[A-Z]+\s"
+    pan_no=re.search(pan_pattern,t).group()
+    try:
+      pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
+    except:
+      pan_name=r"^[A-Z]+\s[A-Z]+\s"
+      pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
+    pan_name=pan_name[:len(pan_name)-1]
+    #st.write("PAN Number :"+pan_no)
+    #st.write("Name :"+ pan_name)
+    
+    if your_name==pan_name and your_no==pan_no:
+      v_p="YES"
+      df2(pan_name,pan_no,v_p)
+      st.success("The Document is Identified as PAN Card and verified successfully.")
+      
+          
+          
+    else:
+      v_p="NO"
+      df2(pan_name,pan_no,v_p)
+      st.error("The Document is Identified as PAN Card, but not verified.  \n  Please verify again...!")
+      
+
+  @st.cache(suppress_st_warning=True)
+  def df2(pan_name,pan_no,v_p):
+    db = sqlite3.connect("testing_pan.db")
+    #db.execute("drop table if exists result2")
+    try:
+        db.execute("create table result2(Name text, PAN_No varchar2(50), Verification text)")
+    except:
+        print("Already table existed !!")
+    cmd = "insert into result2(Name, PAN_No, Verification) values('{}','{}','{}')".format(pan_name,pan_no,v_p)
+    db.execute(cmd)
+    db.commit()
+    qry = """ SELECT * FROM result2 """
+    df2 = pd.read_sql_query(qry, db)
+    st.write(df2.head())
+
+
+  @st.cache(suppress_st_warning=True)
+  def driving(result,img,your_name,your_no):
+
+    spacer = 100
+    t=""
+    l=[]
+    f=0
+    for detection in result: 
+        top_left = tuple(detection[0][0])
+        bottom_right = tuple(detection[0][2])
+        text = detection[1]
+        try:
+          img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
+          img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
+        except:
+          pass
+      
+        spacer+=15
+        #print(text)
+        x=text.split(" ")
+        l.append(x)
+        t=t+text+"\n"
+
+    if(['Name'] in l):
+      d_name=l[l.index(['Name'])+1]
+      d_name=' '.join(map(str,d_name))
+      #print(d_name)
+      #print(type(d_name))
+      f=1
+    d_pattern=r"[A-Z]{2}\w+\s\d\w+"
+    d_no=re.search(d_pattern,t).group()
+    
+    if f==0:
+      d_name=r"^[A-Z]+\s[A-Z]+\s"
+      d_name=re.search(d_name,t,flags=re.MULTILINE).group()
+    #st.write("Driving License Number :"+d_no)
+    #st.write("Name :"+ d_name)
+
+    if your_name==d_name and your_no==d_no:
+          v_d="YES"
+          df3(d_name,d_no,v_d)
+          st.success("The Document is Identified as Driving License and verified successfully.")
+          
+          
+    else:
+          v_d="NO"
+          df3(d_name,d_no,v_d)
+          st.error("The Document is Identified as Driving License, but not verified.  \n  Please verify again...!")
+
+  @st.cache(suppress_st_warning=True)
+  def df3(d_name,d_no,v_d):
+    db = sqlite3.connect("testing_DL.db")
+    #db.execute("drop table if exists result3")
+    try:
+        db.execute("create table result3(Name text, Driving_License_No varchar2(50), Verification text)")
+    except:
+        print("Already table existed !!")
+    cmd = "insert into result3(Name, Driving_License_No, Verification) values('{}','{}','{}')".format(d_name,d_no,v_d)
+    db.execute(cmd)
+    db.commit()
+    qry = """ SELECT * FROM result3 """
+    df3 = pd.read_sql_query(qry, db)
+    st.write(df3.head())
+
+  if uploaded_file is not None:
+
+          img = Image.open(uploaded_file)
+          catagories=['Aadhar card', 'Driving license', 'Pan card']
+          #st.write('Result...')
+          flat_data=[]
+          imgi=np.array(img)
+          img_resized=resize(imgi,(150,150,3))
+          flat_data.append(img_resized.flatten())
+          flat_data=np.array(flat_data)
+          y_out=model.predict(flat_data)
+          y_out=catagories[y_out[0]]
+          IMAGE_PATH = img
+          reader = easyocr.Reader(['en'])
+          result = reader.readtext(IMAGE_PATH)
+          
+                  
+          if y_out=="Pan card":
+              data = pan(result,imgi,your_name,your_no)
+          elif y_out=="Aadhar card":
+              data = aa(result,imgi,your_name,your_no)
+          else:
+              data = driving(result,imgi,your_name,your_no)
+      #st.success("Here you go!")
+  else:
+      st.write("Upload an Image")
+
+elif page == 'Multi-image File':
+
+  st.text('upload the Multi-image CSV File')
+
+  model=pickle.load(open('img_model.p','rb'))
+
+  dataset = st.file_uploader("upload file here", type = ['csv'])
+  if dataset is not None:
+    df = pd.read_csv(dataset)
+
+    @st.cache(suppress_st_warning=True)
+    def aa(result,img,your_name,your_no):
+      decodedObjects = pyzbar.decode(img)
+      for obj in decodedObjects:
+        x=list(str(obj.data).split('"'))
+        if(obj.type=='QRCODE'):
+          print(x[7],x[5])
+      try:
+        aa_name=x[7]
+        aa_no=x[5]
+        if (aa_name==your_name and aa_no==your_no):
+          aut="YES"
+          ver="YES"
+          #st.write("Aadhar Name:"+ aa_name)
+          #st.write("Aadhar no:"+ aa_no)
+          df1(aa_name,aa_no,aut,ver)
+          #st.success("The Document is Identified as Aadhaar Card and Authenticated successfully...!")
+      except:    
+        spacer = 100
+        t=''
+        l=['Unique', 'Identification', 'Authority', 'of', 'India','Solapur', 'North','Father','Uniquue Identiic']
+        for detection in result: 
+          top_left = tuple(detection[0][0])
+          bottom_right = tuple(detection[0][2])
+          text = detection[1]
+          try:
+            img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
+            img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
+          except:
+            pass   
+          spacer+=15
+          #print(text)
+          x=text.split(" ")
+          c=0
+          for i in x:
+            if i in l:
+              c=1
+              break
+          if c==0:
+            t=t+text+"\n"
+        aa_pattern=r"\d{4}\s\d{4}\s\d{4}"
+        aa_no_=re.search(aa_pattern,t).group()
+        no=''
+        for i in aa_no_:
+          if(i!="\n" and i!=" "):
+              no=no+i
+        aa_no=no
+        #st.write("Aadhar Number :"+ no)
+        try:
+            aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
+            aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
+        except AttributeError:
+            aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
+            aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
+
+        #st.write("Name :"+ aa_name)
+
+        if your_name==aa_name and your_no==aa_no:
+          aut="NO"
+          ver="YES"
+          df1(aa_name,aa_no,aut,ver)
+          #st.error("The Document is Identified as Aadhaar Card and verified. But cannot authenticate due to blur image or QRcode is not available.  \n  Please upload again...!")
+              
+        else:
+          aut="NO"
+          ver="NO"
+          df1(aa_name,aa_no,aut,ver)
+          #st.error("The Document is Identified as Aadhaar Card, but not verified and authenticate.  \n  Please verify again...!")
+
+    @st.cache(suppress_st_warning=True)
+    def df1(aa_name,aa_no,aut,ver):
+      db = sqlite3.connect("multi_testing_aa.db")
+      #db.execute("drop table if exists result")
+      #st.write(aa_no)
+      try:
+          db.execute("create table result11(Name text, Aadhaar_No number ,Authenticate text, Verification text)")
+      except:
+          print("Already table existed !!")
+      cmd = "insert into result11(Name, Aadhaar_No,Authenticate,Verification) values('{}','{}','{}','{}')".format(aa_name,aa_no,aut,ver)
+      db.execute(cmd)
+      db.commit()
+      
+
+    @st.cache(suppress_st_warning=True)
+    def pan(result,img,your_name,your_no):
+      spacer = 100
+      t=""
+      l=["INCOME","TAX","DEPARTMENT","GOVT","OF","INDIA","Permanent","Account","Number"]
+      for detection in result: 
+          top_left = tuple(detection[0][0])
+          bottom_right = tuple(detection[0][2])
+          text = detection[1]
+          try:
+            img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
+            img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
+          except:
+            pass
+          
+          spacer+=15
+          #print(text)
+          x=text.split(" ")
+          c=0
+          for i in x:
+            if i in l:
+              c=1
+              break
+          if c==0:
+            t=t+text+"\n"
+      #st.write(t)  
+      pan_pattern=r"[A-Z]{5}\d{4}[A-Z]"
+      pan_name=r"^[A-Z]+\s[A-Z]+\s[A-Z]+\s"
+      pan_no=re.search(pan_pattern,t).group()
+      try:
+        pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
+      except:
+        pan_name=r"^[A-Z]+\s[A-Z]+\s"
+        pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
+      pan_name=pan_name[:len(pan_name)-1]
+      #st.write("PAN Number :"+pan_no)
+      #st.write("Name :"+ pan_name)
+      
+      if your_name==pan_name and your_no==pan_no:
+        v_p="YES"
+        df2(pan_name,pan_no,v_p)
+        #st.success("The Document is Identified as PAN Card and verified successfully.")
+        
+            
+            
+      else:
+        v_p="NO"
+        df2(pan_name,pan_no,v_p)
+        #st.error("The Document is Identified as PAN Card, but not verified.  \n  Please verify again...!")
+        
+
+    @st.cache(suppress_st_warning=True)
+    def df2(pan_name,pan_no,v_p):
+      db = sqlite3.connect("multi_testing_pan.db")
+      #db.execute("drop table if exists result")
+      try:
+          db.execute("create table result22(Name text, PAN_No varchar2(50), Verification text)")
+      except:
+          print("Already table existed !!")
+      cmd = "insert into result22(Name, PAN_No, Verification) values('{}','{}','{}')".format(pan_name,pan_no,v_p)
+      db.execute(cmd)
+      db.commit()
+      
+
+
+    @st.cache(suppress_st_warning=True)
+    def driving(result,img,your_name,your_no):
+
+      spacer = 100
+      t=""
+      l=[]
+      f=0
+      for detection in result: 
+          top_left = tuple(detection[0][0])
+          bottom_right = tuple(detection[0][2])
+          text = detection[1]
+          try:
+            img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
+            img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
+          except:
+            pass
+        
+          spacer+=15
+          #print(text)
+          x=text.split(" ")
+          l.append(x)
+          t=t+text+"\n"
+
+      if(['Name'] in l):
+        d_name=l[l.index(['Name'])+1]
+        d_name=' '.join(map(str,d_name))
+        #print(d_name)
+        #print(type(d_name))
+        f=1
+      d_pattern=r"[A-Z]{2}\w+\s\d\w+"
+      d_no=re.search(d_pattern,t).group()
+      
+      if f==0:
+        d_name=r"^[A-Z]+\s[A-Z]+\s"
+        d_name=re.search(d_name,t,flags=re.MULTILINE).group()
+      #st.write("Driving License Number :"+d_no)
+      #st.write("Name :"+ d_name)
+
+      if your_name==d_name and your_no==d_no:
+            v_d="YES"
+            df3(d_name,d_no,v_d)
+            #st.success("The Document is Identified as Driving License and verified successfully.")
+            
+            
+      else:
+            v_d="NO"
+            df3(d_name,d_no,v_d)
+            #st.error("The Document is Identified as Driving License, but not verified.  \n  Please verify again...!")
+
+    @st.cache(suppress_st_warning=True)
+    def df3(d_name,d_no,v_d):
+      db = sqlite3.connect("multi_testing_DL.db")
+      #db.execute("drop table if exists result")
+      try:
+          db.execute("create table result33(Name text, Driving_License_No varchar2(50), Verification text)")
+      except:
+          print("Already table existed !!")
+      cmd = "insert into result33(Name, Driving_License_No, Verification) values('{}','{}','{}')".format(d_name,d_no,v_d)
+      db.execute(cmd)
+      db.commit()
+      
+    #reader = csv.reader(df)
+    #st.write(len(df))
+    if df is not None:
+            for i in range(len(df)):
+              img = Image.open(df.loc[i][2])
+              #st.image(image, use_column_width=True)
+              #st.write(df.loc[i][2])
+              catagories=['Aadhar card', 'Driving license', 'Pan card']
+              #st.write('Result...')
+              flat_data=[]
+              imgi=np.array(img)
+              img_resized=resize(imgi,(150,150,3))
+              flat_data.append(img_resized.flatten())
+              flat_data=np.array(flat_data)
+              y_out=model.predict(flat_data)
+              y_out=catagories[y_out[0]]
+              IMAGE_PATH = img
+              reader = easyocr.Reader(['en'])
+              result = reader.readtext(IMAGE_PATH)
+            
+              your_name=df.loc[i][0]
+              your_no=str(df.loc[i][1])    
+              if y_out=="Pan card":
+                  data = pan(result,imgi,your_name,your_no)
+              elif y_out=="Aadhar card":
+                  data = aa(result,imgi,your_name,your_no)
+              else:
+                  data = driving(result,imgi,your_name,your_no)
+            try:
+              db = sqlite3.connect("multi_testing_aa.db")
+              qry = """ SELECT * FROM result11 """
+              df1 = pd.read_sql_query(qry, db)
+              st.write(df1.head())
+              db.execute("drop table if exists result11")
+            except:
+                pass
+            try:
+              db = sqlite3.connect("multi_testing_pan.db")
+              qry = """ SELECT * FROM result22 """
+              df2 = pd.read_sql_query(qry, db)
+              st.write(df2.head())
+              db.execute("drop table if exists result22")
+            except:
+              pass
+            try:
+              db = sqlite3.connect("multi_testing_DL.db")
+              qry = """ SELECT * FROM result33 """
+              df3 = pd.read_sql_query(qry, db)
+              st.write(df3.head())
+              db.execute("drop table if exists result33")
+            except:
+              pass
+
+    else:
+        st.write("Upload an Image")
+
+else:
+    st.write("good bye")
+
+
+
+
+
+
+
+
+
+streamlit run app.py & npx localtunnel --port 8501
+
+Commented out IPython magic to ensure Python compatibility.
+%%writefile app.py
+import json
+import easyocr
+from matplotlib import pyplot as plt
+import tkinter
+from tkinter import font
+import cv2
+import numpy as np
+import sys
+import os
+from PIL import Image
+import io
+import streamlit as st
+from skimage.io import imread
+from skimage.transform import resize
+import pickle
+import re
+import pandas as pd
+import sqlite3
+import pyzbar.pyzbar as pyzbar
+from pyzbar.pyzbar import decode
+
+
+
+st.title('Image classifier and text extraction using ML')
+st.text('upload the Image for identification')
+
+model=pickle.load(open('img_model.p','rb'))
+
+your_name = st.text_input("Enter your Name")
+st.title(your_name)
+your_no = st.text_input("Enter your Document Number")
+st.title(your_no)
+
+uploaded_file= st.file_uploader("choose an image...",type=['jpeg','jpg','png'])
+
+#title
+st.title('Extraction and verification of document')
+
+@st.cache(suppress_st_warning=True)
+def aa(result,img,your_name,your_no):
+  decodedObjects = pyzbar.decode(img)
+  for obj in decodedObjects:
+    x=list(str(obj.data).split('"'))
+    if(obj.type=='QRCODE'):
+      print(x[7],x[5])
+  try:
+    aa_name=x[7]
+    aa_no=x[5]
+    if (aa_name==your_name and aa_no==your_no):
+      aut="YES"
+      ver="YES"
+      st.write("Aadhar Name:"+ aa_name)
+      st.write("Aadhar no:"+ aa_no)
+      df1(aa_name,aa_no,aut,ver)
+      st.success("The Document is Identified as Aadhaar Card and Authenticated successfully...!")
+  except:    
+    spacer = 100
+    t=''
+    l=['Unique', 'Identification', 'Authority', 'of', 'India','Solapur', 'North','Father']
+    for detection in result: 
+      top_left = tuple(detection[0][0])
+      bottom_right = tuple(detection[0][2])
+      text = detection[1]
+      try:
+        img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
+        img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
+      except:
+        pass
+      
+      
+      spacer+=15
+      #print(text)
+
+      x=text.split(" ")
+      c=0
+      for i in x:
+        if i in l:
+          c=1
+          break
+      if c==0:
+        t=t+text+"\n"
+
+    aa_pattern=r"\d{4}\s\d{4}\s\d{4}"
+    aa_no_=re.search(aa_pattern,t).group()
+    no=''
+    for i in aa_no_:
+      if(i!="\n" and i!=" "):
+          no=no+i
+    aa_no=no
+    st.write("Aadhar Number :"+ no)
+
+
+    try:
+        aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
+        aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
+    except AttributeError:
+        aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
+        aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
+
+    st.write("Name :"+ aa_name)
+
+
+    if your_name==aa_name and your_no==aa_no:
+      aut="NO"
+      ver="YES"
+      df1(aa_name,aa_no,aut,ver)
+      st.error("The Document is Identified as Aadhaar Card and verified. But cannot authenticate due to blur image or QRcode is not available.  \n  Please upload again...!")
+          
+          
+    else:
+      aut="NO"
+      ver="NO"
+      df1(aa_name,aa_no,aut,ver)
+      st.error("The Document is Identified as Aadhaar Card, but not verified and authenticate.  \n  Please verify again...!")
+
+@st.cache(suppress_st_warning=True)
+def df1(aa_name,aa_no,aut,ver):
+  db = sqlite3.connect("testing_aa.db")
+  #db.execute("drop table if exists result")
+  #st.write(aa_no)
+  try:
+      db.execute("create table result1(Name text, Aadhaar_No number ,Authenticate text, Verification text)")
+  except:
+      print("Already table existed !!")
+  cmd = "insert into result1(Name, Aadhaar_No,Authenticate,Verification) values('{}','{}','{}','{}')".format(aa_name,aa_no,aut,ver)
+  db.execute(cmd)
+  db.commit()
+  qry = """ SELECT * FROM result1 """
+  df1 = pd.read_sql_query(qry, db)
+  st.write(df1.head())
+
+@st.cache(suppress_st_warning=True)
+def pan(result,img,your_name,your_no):
+  spacer = 100
+  t=""
+  l=["INCOME","TAX","DEPARTMENT","GOVT","OF","INDIA","Permanent","Account","Number"]
+  for detection in result: 
+      top_left = tuple(detection[0][0])
+      bottom_right = tuple(detection[0][2])
+      text = detection[1]
+      try:
+        img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
+        img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
+      except:
+        pass
+      
+      spacer+=15
+      #print(text)
+      x=text.split(" ")
+      c=0
+      for i in x:
+        if i in l:
+          c=1
+          break
+      if c==0:
+        t=t+text+"\n"
+  #st.write(t)  
+  pan_pattern=r"[A-Z]{5}\d{4}[A-Z]"
+  pan_name=r"^[A-Z]+\s[A-Z]+\s[A-Z]+\s"
+  pan_no=re.search(pan_pattern,t).group()
+  try:
+    pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
+  except:
+    pan_name=r"^[A-Z]+\s[A-Z]+\s"
+    pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
+  pan_name=pan_name[:len(pan_name)-1]
+  st.write("PAN Number :"+pan_no)
+  st.write("Name :"+ pan_name)
+  
+  if your_name==pan_name and your_no==pan_no:
+    v_p="YES"
+    df2(pan_name,pan_no,v_p)
+    st.success("The Document is Identified as PAN Card and verified successfully.")
+    
+        
+        
+  else:
+    v_p="NO"
+    df2(pan_name,pan_no,v_p)
+    st.error("The Document is Identified as PAN Card, but not verified.  \n  Please verify again...!")
+    
+
+@st.cache(suppress_st_warning=True)
+def df2(pan_name,pan_no,v_p):
+  db = sqlite3.connect("testing_pan.db")
+  #db.execute("drop table if exists result")
+  try:
+      db.execute("create table result2(Name text, PAN_No varchar2(50), Verification text)")
+  except:
+      print("Already table existed !!")
+  cmd = "insert into result2(Name, PAN_No, Verification) values('{}','{}','{}')".format(pan_name,pan_no,v_p)
+  db.execute(cmd)
+  db.commit()
+  qry = """ SELECT * FROM result2 """
+  df2 = pd.read_sql_query(qry, db)
+  st.write(df2.head())
+
+
+@st.cache(suppress_st_warning=True)
+def driving(result,img,your_name,your_no):
+
+  spacer = 100
+  t=""
+  l=[]
+  f=0
+  for detection in result: 
+      top_left = tuple(detection[0][0])
+      bottom_right = tuple(detection[0][2])
+      text = detection[1]
+      try:
+        img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
+        img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
+      except:
+        pass
+     
+      spacer+=15
+      #print(text)
+      x=text.split(" ")
+      l.append(x)
+      t=t+text+"\n"
+
+  if(['Name'] in l):
+    d_name=l[l.index(['Name'])+1]
+    d_name=' '.join(map(str,d_name))
+    #print(d_name)
+    #print(type(d_name))
+    f=1
+  d_pattern=r"[A-Z]{2}\w+\s\d\w+"
+  d_no=re.search(d_pattern,t).group()
+  
+  if f==0:
+    d_name=r"^[A-Z]+\s[A-Z]+\s"
+    d_name=re.search(d_name,t,flags=re.MULTILINE).group()
+  st.write("Driving License Number :"+d_no)
+  st.write("Name :"+ d_name)
+
+  if your_name==d_name and your_no==d_no:
+        v_d="YES"
+        df3(d_name,d_no,v_d)
+        st.success("The Document is Identified as Driving License and verified successfully.")
+        
+        
+  else:
+        v_d="NO"
+        df3(d_name,d_no,v_d)
+        st.error("The Document is Identified as Driving License, but not verified.  \n  Please verify again...!")
+
+@st.cache(suppress_st_warning=True)
+def df3(d_name,d_no,v_d):
+  db = sqlite3.connect("testing_DL.db")
+  #db.execute("drop table if exists result")
+  try:
+      db.execute("create table result3(Name text, Driving_License_No varchar2(50), Verification text)")
+  except:
+      print("Already table existed !!")
+  cmd = "insert into result3(Name, Driving_License_No, Verification) values('{}','{}','{}')".format(d_name,d_no,v_d)
+  db.execute(cmd)
+  db.commit()
+  qry = """ SELECT * FROM result3 """
+  df3 = pd.read_sql_query(qry, db)
+  st.write(df3.head())
+
+if uploaded_file is not None:
+
+        img = Image.open(uploaded_file)
+        catagories=['Aadhar card', 'Driving license', 'Pan card']
+        #st.write('Result...')
+        flat_data=[]
+        imgi=np.array(img)
+        img_resized=resize(imgi,(150,150,3))
+        flat_data.append(img_resized.flatten())
+        flat_data=np.array(flat_data)
+        y_out=model.predict(flat_data)
+        y_out=catagories[y_out[0]]
+        IMAGE_PATH = img
+        reader = easyocr.Reader(['en'])
+        result = reader.readtext(IMAGE_PATH)
+        
+                
+        if y_out=="Pan card":
+            data = pan(result,imgi,your_name,your_no)
+        elif y_out=="Aadhar card":
+            data = aa(result,imgi,your_name,your_no)
+        else:
+            data = driving(result,imgi,your_name,your_no)
+    #st.success("Here you go!")
+else:
+    st.write("Upload an Image")
+
+#db = sqlite3.connect("testing_aa.db")
+#db.execute("drop table if exists result1")
+#db = sqlite3.connect("testing_pan.db")
+#db.execute("drop table if exists result2")
+#db = sqlite3.connect("testing_DL.db")
+#db.execute("drop table if exists result3")
+
+
+
+
+Commented out IPython magic to ensure Python compatibility.
+%%writefile app.py
+import json
+import easyocr
+from matplotlib import pyplot as plt
+import tkinter
+from tkinter import font
+import cv2
+import numpy as np
+import sys
+import os
+from PIL import Image
+import io
+import streamlit as st
+from skimage.io import imread
+from skimage.transform import resize
+import pickle
+import re
+import pandas as pd
+import sqlite3
+import pyzbar.pyzbar as pyzbar
+from pyzbar.pyzbar import decode
+
+
+
+st.title('Image classifier and text extraction using ML')
+st.text('upload the Image for identification')
+
+model=pickle.load(open('img_model.p','rb'))
+
+df = pd.read_csv("/content/drive/MyDrive/APD.csv")
+
+
+#title
+st.title('Extraction and verification of document')
+
+@st.cache(suppress_st_warning=True)
+def aa(result,img,your_name,your_no):
+  decodedObjects = pyzbar.decode(img)
+  for obj in decodedObjects:
+    x=list(str(obj.data).split('"'))
+    if(obj.type=='QRCODE'):
+      print(x[7],x[5])
+  try:
+    aa_name=x[7]
+    aa_no=x[5]
+    if (aa_name==your_name and aa_no==your_no):
+      aut="YES"
+      ver="YES"
+      st.write("Aadhar Name:"+ aa_name)
+      st.write("Aadhar no:"+ aa_no)
+      df1(aa_name,aa_no,aut,ver)
+      st.success("The Document is Identified as Aadhaar Card and Authenticated successfully...!")
+  except:    
+    spacer = 100
+    t=''
+    l=['Unique', 'Identification', 'Authority', 'of', 'India','Solapur', 'North','Father','Uniquue Identiic']
+    for detection in result: 
+      top_left = tuple(detection[0][0])
+      bottom_right = tuple(detection[0][2])
+      text = detection[1]
+      try:
+        img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
+        img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
+      except:
+        pass   
+      
+      spacer+=15
+      #print(text)
+
+      x=text.split(" ")
+      c=0
+      for i in x:
+        if i in l:
+          c=1
+          break
+      if c==0:
+        t=t+text+"\n"
+
+    aa_pattern=r"\d{4}\s\d{4}\s\d{4}"
+    aa_no_=re.search(aa_pattern,t).group()
+    no=''
+    for i in aa_no_:
+      if(i!="\n" and i!=" "):
+          no=no+i
+    aa_no=no
+    st.write("Aadhar Number :"+ no)
+
+
+    try:
+        aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
+        aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
+    except AttributeError:
+        aa_name=r"^[A-Z][a-z]\w+\s[A-Z][a-z]\w+"
+        aa_name=re.search(aa_name,t,flags=re.MULTILINE).group()
+
+    st.write("Name :"+ aa_name)
+
+
+    if your_name==aa_name and your_no==aa_no:
+      aut="NO"
+      ver="YES"
+      df1(aa_name,aa_no,aut,ver)
+      st.error("The Document is Identified as Aadhaar Card and verified. But cannot authenticate due to blur image or QRcode is not available.  \n  Please upload again...!")
+          
+          
+    else:
+      aut="NO"
+      ver="NO"
+      df1(aa_name,aa_no,aut,ver)
+      st.error("The Document is Identified as Aadhaar Card, but not verified and authenticate.  \n  Please verify again...!")
+
+@st.cache(suppress_st_warning=True)
+def df1(aa_name,aa_no,aut,ver):
+  db = sqlite3.connect("testing_aa.db")
+  #db.execute("drop table if exists result")
+  #st.write(aa_no)
+  try:
+      db.execute("create table result1(Name text, Aadhaar_No number ,Authenticate text, Verification text)")
+  except:
+      print("Already table existed !!")
+  cmd = "insert into result1(Name, Aadhaar_No,Authenticate,Verification) values('{}','{}','{}','{}')".format(aa_name,aa_no,aut,ver)
+  db.execute(cmd)
+  db.commit()
+  
+
+@st.cache(suppress_st_warning=True)
+def pan(result,img,your_name,your_no):
+  spacer = 100
+  t=""
+  l=["INCOME","TAX","DEPARTMENT","GOVT","OF","INDIA","Permanent","Account","Number"]
+  for detection in result: 
+      top_left = tuple(detection[0][0])
+      bottom_right = tuple(detection[0][2])
+      text = detection[1]
+      try:
+        img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
+        img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
+      except:
+        pass
+      
+      spacer+=15
+      #print(text)
+      x=text.split(" ")
+      c=0
+      for i in x:
+        if i in l:
+          c=1
+          break
+      if c==0:
+        t=t+text+"\n"
+  #st.write(t)  
+  pan_pattern=r"[A-Z]{5}\d{4}[A-Z]"
+  pan_name=r"^[A-Z]+\s[A-Z]+\s[A-Z]+\s"
+  pan_no=re.search(pan_pattern,t).group()
+  try:
+    pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
+  except:
+    pan_name=r"^[A-Z]+\s[A-Z]+\s"
+    pan_name=re.search(pan_name,t,flags=re.MULTILINE).group()
+  pan_name=pan_name[:len(pan_name)-1]
+  st.write("PAN Number :"+pan_no)
+  st.write("Name :"+ pan_name)
+  
+  if your_name==pan_name and your_no==pan_no:
+    v_p="YES"
+    df2(pan_name,pan_no,v_p)
+    st.success("The Document is Identified as PAN Card and verified successfully.")
+    
+        
+        
+  else:
+    v_p="NO"
+    df2(pan_name,pan_no,v_p)
+    st.error("The Document is Identified as PAN Card, but not verified.  \n  Please verify again...!")
+    
+
+@st.cache(suppress_st_warning=True)
+def df2(pan_name,pan_no,v_p):
+  db = sqlite3.connect("testing_pan.db")
+  #db.execute("drop table if exists result")
+  try:
+      db.execute("create table result2(Name text, PAN_No varchar2(50), Verification text)")
+  except:
+      print("Already table existed !!")
+  cmd = "insert into result2(Name, PAN_No, Verification) values('{}','{}','{}')".format(pan_name,pan_no,v_p)
+  db.execute(cmd)
+  db.commit()
+ 
+@st.cache(suppress_st_warning=True)
+def driving(result,img,your_name,your_no):
+
+  spacer = 100
+  t=""
+  l=[]
+  f=0
+  for detection in result: 
+      top_left = tuple(detection[0][0])
+      bottom_right = tuple(detection[0][2])
+      text = detection[1]
+      try:
+        img = cv2.rectangle(img,top_left,bottom_right,(0,255,0),3)
+        img = cv2.putText(img,text,(20,spacer), font, 0.5,(0,255,0),2,cv2.LINE_AA)
+      except:
+        pass
+     
+      spacer+=15
+      #print(text)
+      x=text.split(" ")
+      l.append(x)
+      t=t+text+"\n"
+
+  if(['Name'] in l):
+    d_name=l[l.index(['Name'])+1]
+    d_name=' '.join(map(str,d_name))
+    #print(d_name)
+    #print(type(d_name))
+    f=1
+  d_pattern=r"[A-Z]{2}\w+\s\d\w+"
+  d_no=re.search(d_pattern,t).group()
+  
+  if f==0:
+    d_name=r"^[A-Z]+\s[A-Z]+\s"
+    d_name=re.search(d_name,t,flags=re.MULTILINE).group()
+  st.write("Driving License Number :"+d_no)
+  st.write("Name :"+ d_name)
+
+  if your_name==d_name and your_no==d_no:
+        v_d="YES"
+        df3(d_name,d_no,v_d)
+        st.success("The Document is Identified as Driving License and verified successfully.")
+        
+        
+  else:
+        v_d="NO"
+        df3(d_name,d_no,v_d)
+        st.error("The Document is Identified as Driving License, but not verified.  \n  Please verify again...!")
+
+@st.cache(suppress_st_warning=True)
+def df3(d_name,d_no,v_d):
+  db = sqlite3.connect("testing_DL.db")
+  #db.execute("drop table if exists result")
+  try:
+      db.execute("create table result3(Name text, Driving_License_No varchar2(50), Verification text)")
+  except:
+      print("Already table existed !!")
+  cmd = "insert into result3(Name, Driving_License_No, Verification) values('{}','{}','{}')".format(d_name,d_no,v_d)
+  db.execute(cmd)
+  db.commit()
+  
+
+if df is not None:
+        for i in range(9):
+          img = Image.open(df.loc[i][2])
+          #st.image(image, use_column_width=True)
+          #st.write(df.loc[i][2])
+          catagories=['Aadhar card', 'Driving license', 'Pan card']
+          #st.write('Result...')
+          flat_data=[]
+          imgi=np.array(img)
+          img_resized=resize(imgi,(150,150,3))
+          flat_data.append(img_resized.flatten())
+          flat_data=np.array(flat_data)
+          y_out=model.predict(flat_data)
+          y_out=catagories[y_out[0]]
+          IMAGE_PATH = img
+          reader = easyocr.Reader(['en'])
+          result = reader.readtext(IMAGE_PATH)
+        
+          your_name=df.loc[i][0]
+          your_no=str(df.loc[i][1])  
+          st.write(your_name,your_no)   
+          if y_out=="Pan card":
+              data = pan(result,imgi,your_name,your_no)
+          elif y_out=="Aadhar card":
+              data = aa(result,imgi,your_name,your_no)
+          else:
+              data = driving(result,imgi,your_name,your_no)
+        try:
+          db = sqlite3.connect("testing_aa.db")
+          qry = """ SELECT * FROM result1 """
+          df1 = pd.read_sql_query(qry, db)
+          st.write(df1.head())
+          db.execute("drop table if exists result1")
+        except:
+            pass
+        try:
+          db = sqlite3.connect("testing_pan.db")
+          qry = """ SELECT * FROM result2 """
+          df2 = pd.read_sql_query(qry, db)
+          st.write(df2.head())
+          db.execute("drop table if exists result2")
+        except:
+          pass
+        try:
+          db = sqlite3.connect("testing_DL.db")
+          qry = """ SELECT * FROM result3 """
+          df3 = pd.read_sql_query(qry, db)
+          st.write(df3.head())
+          db.execute("drop table if exists result3")
+        except:
+          pass
+
+else:
+    st.write("Upload an Image")
+
 
